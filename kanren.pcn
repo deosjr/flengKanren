@@ -1,0 +1,321 @@
+// goal: f(state) -> stream, or a relation with st/str as last two args
+// variables are a tuple of one integer value
+-struct(state(substitutions, variablecounter))
+
+// test: add sleep to equalo, then change composition of disj
+// can show disj in parallel composition is faster!
+sleep(secs)
+{
+    timer(secs * 1000, done, _),
+    if(data(done)) {}
+}
+
+empty_state(s)
+{
+    s = state([], 0)
+}
+
+// var is a relation between two states, minting a new variable
+var(v, :st)
+{
+    v = { x },
+    x = st.variablecounter,
+    st.variablecounter <-- st.variablecounter + 1
+}
+
+walk(u, sub, v)
+{?
+    u ?= {_} -> {
+        map:lookup(u, sub, value, false),
+        if(value) walk(value, sub, v)
+        else v = u
+    },
+    default -> v = u
+}
+
+unify(u0, v0, sub0, sub)
+{
+    walk(u0, sub0, u),
+    walk(v0, sub0, v),
+    {?
+        u ?= {x}, v ?= {x} -> sub = sub0,
+        u ?= {_} -> map:insert(u, v, sub0, sub),
+        v ?= {_} -> map:insert(v, u, sub0, sub),
+        u ?= [uh|ut], v ?= [vh|vt] -> {
+            unify(uh, vh, sub0, sub1),
+            unify(ut, vt, sub1, sub)
+        },
+        u == v -> sub = sub0,
+        default -> sub = false
+    }
+}
+
+#define equalo(u, v) ``_equalo(u,v)``
+_equalo(u, v, st, str, fill)
+{
+    //sleep(1),
+    sub0 = st.substitutions,
+    vc = st.variablecounter,
+    unify(u, v, sub0, sub),
+    if(sub == false) str = []
+    else {?
+        fill ?= [place|_] -> {
+            str = [place],
+            place = state(sub, vc)
+        }
+    }
+}
+
+#define callfresh(x, goal) ``_callfresh(x, goal)``
+_callfresh(x, goal, st0, str, fill)
+{
+    var(x, st0, st),
+    `goal`(st, str, fill)
+}
+
+callempty(x, goal, str, fill)
+{
+    empty_state(st0),
+    _callfresh(x, goal, st0, str, fill),
+}
+
+#define disj(goal1, goal2) ``_disj(goal1, goal2)``
+_disj(goal1, goal2, st, str, fill)
+{?
+    str ?= [] -> fill = [],
+    data(fill) -> {||
+        `goal1`(st, str1, fill1),
+        `goal2`(st, str2, fill2),
+        mplus(str1, fill1, str2, fill2, str, fill)
+    }
+}
+
+function disj3(goal1, goal2, goal3)
+{
+    f = ``_disj(goal2, goal3)``,
+    return(``_disj(goal1, f)``)
+}
+
+mplus(str1, fill1, str2, fill2, str, fill)
+{?
+    str ?= [] -> {
+        str1 = [],
+        str2 = [],
+    },
+    fill ?= [_|more] -> {
+        fill1 = [_|more1],
+        {?
+            str1 ?= [] -> {
+                str2 = str,
+                fill2 = fill
+            },
+            str1 ?= [h|t] -> {
+                str = [h|str3],
+                mplus(str2, fill2, t, more1, str3, more),
+            }
+        }
+    }
+}
+
+#define disj_plus(goals...) ``_disj_plus([goals])``
+_disj_plus(goals, st, str, fill)
+{?
+    str ?= [] -> fill = [],
+    data(fill) -> {||
+        app:maplist(``applygoal(st)``, goals, streams),
+        mplusplus(streams, [], str, fill)
+    }
+}
+
+applygoal(st, g, res)
+{||
+    `g`(st, str, fill),
+    res = [str, fill]
+}
+
+// m++ merges generating streams into str
+// buffer contains one result of each stream
+mplusplus(streams, buffer, str, fill)
+{?
+    str ?= [] -> close(streams),
+    fill ?= [_|more] -> {?
+        buffer ?= [] -> {
+            resolve_once(streams, newstreams, newbuffer),
+            mplusplus(newstreams, newbuffer, str, fill)
+        },
+        buffer ?= [x|bmore] -> {
+            str = [x|str2],
+            mplusplus(streams, bmore, str2, more)
+        }
+    }
+}
+
+resolve_once(streams, newstreams, buffer)
+{
+    app:maplist(``resolve_once``, streams, res),
+    notfalse = `(x,t) -> if(x) t=true else t=false,
+    app:filter(notfalse, res, res2),
+    app:maplist(``first``, res2, buffer),
+    app:maplist(``tail``, res2, newstreams),
+}
+
+first(list, h) { let list ?= [h|_] }
+tail(list, t) { let list ?= [_|t] }
+
+resolve_once(stream, res)
+{
+    let stream ?= [str, fill],
+    fill = [_|more],
+    {?
+        str ?= [] -> res = false,
+        str ?= [h|t] -> res = [h,t,more],
+    }
+}
+
+close(streams)
+{?
+    streams ?= [[s,_]|more] -> {
+        s = [],
+        close(more)
+    }
+}
+
+#define conj(goal1, goal2) ``_conj(goal1, goal2)``
+_conj(goal1, goal2, st, str, fill)
+{?
+    str ?= [] -> fill = [],
+    data(fill) -> {||
+        `goal1`(st, str0, fill0),
+        bind(str0, fill0, goal2, str, fill)
+    }
+}
+
+bind(str0, fill0, goal, str, fill)
+{?
+    str ?= [] -> str0 = [],
+    fill ?= [_|more] -> {
+        fill0 = [_|more0],
+        {?
+            str0 ?= [] -> str = [],
+            str0 ?= [h0|t0] -> {||
+                `goal`(h0, str1, fill1),
+                fill1 = [_|more1],
+                {?
+                    str1 ?= [] -> {
+                        bind(t0, more0, goal, str, fill)
+                    },
+                    str1 ?= [h1|t1] -> {||
+                        str = [h1|str3],
+                        bind(t0, more0, goal, str2, fill2),
+                        mplus(t1, more1, str2, fill2, str3, more),
+                    }
+                },
+            }
+        }
+    }
+}
+
+take_all(str, fill)
+{?
+    str ?= [_|more] -> {
+        fill = [_|fill2],
+        take_all(more, fill2)
+    }
+}
+
+take_n(n, str, fill)
+{
+    if(n == 0) str = []
+    else {?
+        str ?= [_|more] -> {
+            fill = [_|fill2],
+            take_n(n-1, more, fill2)
+        }
+    }
+}
+
+#define five_or_six(x) ``_five_or_six(x)``
+_five_or_six(x, st, str)
+{
+    f = disj(equalo(x, 5), equalo(x, 6)),
+    `f`(st, str)
+}
+
+#define fives(x) ``_fives(x)``
+_fives(x, st, str, fill)
+{
+    apply( disj(equalo(x, 5), fives(x)), [st, str, fill])
+}
+
+#define sixes(x) ``_sixes(x)``
+_sixes(x, st, str, fill)
+{
+    apply( disj(equalo(x, 6), sixes(x)), [st, str, fill])
+}
+
+#define fives_and_sixes(x) ``_fives_and_sixes(x)``
+_fives_and_sixes(x, st, str, fill)
+{
+    apply( disj(fives(x), sixes(x)), [st, str, fill])
+}
+
+#define sevens(x) ``_sevens(x)``
+_sevens(x, st, str, fill)
+{
+    apply( disj(equalo(x, 7), sevens(x)), [st, str, fill])
+}
+
+walkstar(u, sub, v)
+{
+    walk(u, sub, u0),
+    {?
+        u0 ?= {_} -> v = u0,
+        u0 ?= [h|t] -> {
+            v = [hh|tt],
+            walkstar(h, sub, hh),
+            walkstar(t, sub, tt)
+        },
+        default -> v = u0
+    }
+}
+
+mK_reify(states, reified)
+{
+    f = `(st, r) -> walkstar({0}, st.substitutions, r),
+    app:maplist(f, states, reified)
+}
+
+main()
+{
+    {||
+    callempty(x, callfresh(y, conj(equalo(5, x), equalo(6,y))), r, [_|fill]),
+    take_all(r, fill),
+    writeln(r),
+    },
+/*
+    {||
+    callempty(q, equalo(5, q), r, [_|fill]),
+    take_all(r, fill),
+    mK_reify(r, rr),
+    writeln(rr),
+    },
+    {||
+    callempty(a, fives_and_sixes(a), res, [_|fill2]),
+    take_n(5, res, fill2),
+    mK_reify(res, ref),
+    writeln(ref),
+    },
+    {||
+    callempty(b, disj3(fives(b), sixes(b), sevens(b)), res2, [_|fill3]),
+    take_n(10, res2, fill3),
+    mK_reify(res2, ref2),
+    writeln(ref2),
+    },
+    {||
+    callempty(c, disj_plus(fives(c), sixes(c), sevens(c)), res3, [_|fill4]),
+    take_n(10, res3, fill4),
+    mK_reify(res3, ref3),
+    writeln(ref3),
+    }
+*/
+}
