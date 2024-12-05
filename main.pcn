@@ -2,9 +2,30 @@
 #include "kanren.pcn"
 main()
 {
-    {||
-    callempty(x, callfresh(y, conj(equalo(5,x), equalo(6,y))), r, [_|fill]),
-    take_all(r, fill),
+    {|| // todo: blocks on take_all or take_n > 2
+    callempty(callfresh(x, disj_plus(equalo(5,x), equalo(6,x))), r, [_|fill]),
+    take_n(2, r, fill),
+    writeln(r)
     },
-    writeln(r),
+    {|| // todo: on take_all or take_n > 2 we get 'expected variable but received: []'
+    callempty(callfresh(y, disj(equalo(5,y), equalo(6,y))), r2, [_|fill2]),
+    take_n(2, r2, fill2),
+    },
+    writeln(r2),
+    {|| // works!
+    callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, [_|fill3]),
+    take_all(r3, fill3),
+    },
+    writeln(r3),
+    {|| // note, substituting vars on the line below it does not work. C preprocessor doesn't like it
+    vars = [i,j,k],
+    callempty(fresh(vars, equalo(5,i), equalo(6,j), equalo(7,k)), r4, [_|fill4]),
+    take_all(r4, fill4),
+    },
+    writeln(r4),
+    // todo: revisit the below once above disj is fixed
+    // todo: write these as a test suite
+    //callempty(x, callfresh(y, disj(equalo(5,x), equalo(6,y))), r, [_|fill]),
+    //callempty(x, callfresh(y, conj(equalo(5,x), disj(equalo(6,y),equalo(7,y)))), r, [_|fill]),
+    //writeln(r),
 }

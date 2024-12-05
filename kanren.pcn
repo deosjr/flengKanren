@@ -73,10 +73,10 @@ _callfresh(x, goal, st0, str, fill)
     `goal`(st, str, fill)
 }
 
-callempty(x, goal, str, fill)
+callempty(goal, str, fill)
 {
     empty_state(st0),
-    _callfresh(x, goal, st0, str, fill),
+    `goal`(st0, str, fill),
 }
 
 #define disj(goal1, goal2) ``_disj(goal1, goal2)``
@@ -212,6 +212,26 @@ bind(str0, fill0, goal, str, fill)
                 },
             }
         }
+    }
+}
+
+#define conj_plus(goals...) ``_conj_plus([goals])``
+_conj_plus(goals, st, str, fill)
+{?
+    goals ?= [g1, g2] -> {
+        _conj(g1, g2, st, str, fill)
+    },
+    goals ?= [g1, g2, g|more] -> {
+        _conj(g1, ``_conj_plus([g2, g|more])``, st, str, fill)
+    }
+}
+
+#define fresh(vars, goals...) ``_fresh(vars, [goals])``
+_fresh(vars, goals, st, str, fill)
+{?
+    vars ?= [] -> _conj_plus(goals, st, str, fill),
+    vars ?= [x|more] -> {
+        _callfresh(x, ``_fresh(more, goals)``, st, str, fill)
     }
 }
 
