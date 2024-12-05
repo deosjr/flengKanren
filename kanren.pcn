@@ -218,11 +218,11 @@ bind(str0, fill0, goal, str, fill)
 #define conj_plus(goals...) ``_conj_plus([goals])``
 _conj_plus(goals, st, str, fill)
 {?
-    goals ?= [g1, g2] -> {
-        _conj(g1, g2, st, str, fill)
+    goals ?= [g] -> {
+        `g`(st, str, fill)
     },
-    goals ?= [g1, g2, g|more] -> {
-        _conj(g1, ``_conj_plus([g2, g|more])``, st, str, fill)
+    goals ?= [g1, g|more] -> {
+        _conj(g1, ``_conj_plus([g|more])``, st, str, fill)
     }
 }
 
@@ -303,4 +303,22 @@ mK_reify(states, reified)
 {
     f = `(st, r) -> walkstar({0}, st.substitutions, r),
     app:maplist(f, states, reified)
+}
+
+// todo: starting with a defined gap in fill is wrong, take should do that
+// todo: parameterize over the reifier
+#define run(r, vars, goals...) _run(r, vars, [goals])
+_run(r, vars, goals)
+{||
+    callempty(``_fresh(vars, goals)``, str, [_|fill]),
+    take_all(str, fill),
+    mK_reify(str, r),
+}
+
+#define run_n(n, r, vars, goals...) _run_n(n, r, vars, [goals])
+_run_n(n, r, vars, goals)
+{||
+    callempty(``_fresh(vars, goals)``, str, [_|fill]),
+    take_n(n, str, fill),
+    mK_reify(str, r),
 }

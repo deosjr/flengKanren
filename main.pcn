@@ -1,18 +1,17 @@
 //-uses(kanren) // TODO: prints twice??
 #include "kanren.pcn"
+
 main()
 {
-    {|| // todo: blocks on take_all or take_n > 2
-    callempty(callfresh(x, disj_plus(equalo(5,x), equalo(6,x))), r, [_|fill]),
-    take_n(2, r, fill),
-    writeln(r)
-    },
-    {|| // todo: on take_all or take_n > 2 we get 'expected variable but received: []'
-    callempty(callfresh(y, disj(equalo(5,y), equalo(6,y))), r2, [_|fill2]),
-    take_n(2, r2, fill2),
-    },
+    // todo: blocks on take_all or take_n > 2
+    vars1 = [x],
+    run_n(2, r, vars1, disj_plus(equalo(5,x), equalo(6,x))),
+    writeln(r),
+    // todo: on take_all or take_n > 2 we get 'expected variable but received: []'
+    vars2 = [y,z],
+    run_n(2, r2, vars2, disj(equalo(5,y), equalo(6,z))),
     writeln(r2),
-    {|| // works!
+    {||
     callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, [_|fill3]),
     take_all(r3, fill3),
     },
