@@ -1,24 +1,23 @@
-//-uses(kanren) // TODO: prints twice??
+//-uses(k) // TODO: prints twice??
+// Bunny351 - this is a bug, which I will fix, for the meantime, add a "-module(k)" at the top of kanren.pcn
+
 #include "kanren.pcn"
 
 main()
 {
     // todo: blocks on take_all or take_n > 2
-    vars1 = [x],
-    run_n(2, r, vars1, disj_plus(equalo(5,x), equalo(6,x))),
+    run_n(2, r, [x], disj_plus(equalo(5,x), equalo(6,x))),
     writeln(r),
     // todo: on take_all or take_n > 2 we get 'expected variable but received: []'
-    vars2 = [y,z],
-    run_n(2, r2, vars2, disj(equalo(5,y), equalo(6,z))),
+    run_n(2, r2, ([y,z]), disj(equalo(5,y), equalo(6,z))),
     writeln(r2),
     {||
     callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, [_|fill3]),
     take_all(r3, fill3),
     },
     writeln(r3),
-    {|| // note, substituting vars on the line below it does not work. C preprocessor doesn't like it
-    vars = [i,j,k],
-    callempty(fresh(vars, equalo(5,i), equalo(6,j), equalo(7,k)), r4, [_|fill4]),
+    {||
+    callempty(fresh(([i,j,k]), equalo(5,i), equalo(6,j), equalo(7,k)), r4, [_|fill4]),
     take_all(r4, fill4),
     },
     writeln(r4),
