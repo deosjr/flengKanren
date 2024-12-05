@@ -1,0 +1,10 @@
+//-uses(kanren) // TODO: prints twice??
+#include "kanren.pcn"
+main()
+{
+    {||
+    callempty(x, callfresh(y, conj(equalo(5,x), equalo(6,y))), r, [_|fill]),
+    take_all(r, fill),
+    },
+    writeln(r),
+}

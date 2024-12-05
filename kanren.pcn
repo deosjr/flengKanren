@@ -284,38 +284,3 @@ mK_reify(states, reified)
     f = `(st, r) -> walkstar({0}, st.substitutions, r),
     app:maplist(f, states, reified)
 }
-
-main()
-{
-    {||
-    callempty(x, callfresh(y, conj(equalo(5, x), equalo(6,y))), r, [_|fill]),
-    take_all(r, fill),
-    writeln(r),
-    },
-/*
-    {||
-    callempty(q, equalo(5, q), r, [_|fill]),
-    take_all(r, fill),
-    mK_reify(r, rr),
-    writeln(rr),
-    },
-    {||
-    callempty(a, fives_and_sixes(a), res, [_|fill2]),
-    take_n(5, res, fill2),
-    mK_reify(res, ref),
-    writeln(ref),
-    },
-    {||
-    callempty(b, disj3(fives(b), sixes(b), sevens(b)), res2, [_|fill3]),
-    take_n(10, res2, fill3),
-    mK_reify(res2, ref2),
-    writeln(ref2),
-    },
-    {||
-    callempty(c, disj_plus(fives(c), sixes(c), sevens(c)), res3, [_|fill4]),
-    take_n(10, res3, fill4),
-    mK_reify(res3, ref3),
-    writeln(ref3),
-    }
-*/
-}

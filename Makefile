@@ -1,2 +1,2 @@
 run:
-	@fleng kanren.pcn && ./a.out
+	@fleng main.pcn && ./a.out
