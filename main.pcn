@@ -8,7 +8,7 @@ main()
     // todo: write these as a test suite
     run(r, ([x,y]), disj_plus(equalo(5,x), equalo(6,y))),
     writeln(r),
-    run(r2, ([p,q]), disj(equalo(5,p), equalo(6,q))),
+    run_n(2, r2, ([p,q]), disj(equalo(5,p), equalo(6,q))),
     writeln(r2),
     {||
     callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, fill3),
@@ -24,4 +24,18 @@ main()
     take_all(r5, fill5),
     },
     writeln(r5),
+    run_reif(r6, ``custom_reifier``, ([pp,qq]), disj(equalo(5,pp), equalo(6,qq))),
+    writeln(r6),
+}
+
+custom_reifier(states, reified)
+{
+    app:maplist(``walk2``, states, reified)
+}
+
+walk2(st, r)
+{
+    walkstar({0}, st.substitutions, x),
+    walkstar({1}, st.substitutions, y),
+    r = {x,y}
 }

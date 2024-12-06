@@ -59,6 +59,7 @@ _equalo(u, v, st, str, fill)
     unify(u, v, sub0, sub),
     if(sub == false) str = []
     else {?
+        str ?= [] -> str = [],
         fill ?= [place|_] -> {
             str = [place],
             place = state(sub, vc)
@@ -248,7 +249,7 @@ take_all(str, fill)
 
 take_n(n, str, fill)
 {
-    if(n == 0) { str = [], fill = [] }
+    if(n == 0) {str = [], fill = []}
     else {
         fill = [_|fill2],
         {?
@@ -308,7 +309,6 @@ mK_reify(states, reified)
     app:maplist(f, states, reified)
 }
 
-// todo: parameterize over the reifier
 #define run(r, vars, goals...) _run(r, vars, [goals])
 _run(r, vars, goals)
 {||
@@ -323,4 +323,20 @@ _run_n(n, r, vars, goals)
     callempty(``_fresh(vars, goals)``, str, fill),
     take_n(n, str, fill),
     mK_reify(str, r),
+}
+
+#define run_reif(r, reif, vars, goals...) _run_reif(r, reif, vars, [goals])
+_run_reif(r, reif, vars, goals)
+{||
+    callempty(``_fresh(vars, goals)``, str, fill),
+    take_all(str, fill),
+    `reif`(str, r),
+}
+
+#define run_n_reif(n, r, reif, vars, goals...) _run_n_reif(n, r, reif, vars, [goals])
+_run_n_reif(n, r, reif, vars, goals)
+{||
+    callempty(``_fresh(vars, goals)``, str, fill),
+    take_n(n, str, fill),
+    `reif`(str, r),
 }
