@@ -106,7 +106,7 @@ mplus(str1, fill1, str2, fill2, str, fill)
         fill1 = [_|more1],
         {?
             str1 ?= [] -> {
-                str2 = str,
+                str = str2,
                 fill2 = fill
             },
             str1 ?= [h|t] -> {
@@ -141,7 +141,10 @@ mplusplus(streams, buffer, str, fill)
     fill ?= [_|more] -> {?
         buffer ?= [] -> {
             resolve_once(streams, newstreams, newbuffer),
-            mplusplus(newstreams, newbuffer, str, fill)
+            {?
+                newbuffer ?= [] -> str = [],
+                default -> mplusplus(newstreams, newbuffer, str, fill)
+            }
         },
         buffer ?= [x|bmore] -> {
             str = [x|str2],
@@ -236,20 +239,20 @@ _fresh(vars, goals, st, str, fill)
 }
 
 take_all(str, fill)
-{?
-    str ?= [_|more] -> {
-        fill = [_|fill2],
-        take_all(more, fill2)
+{
+    fill = [_|fill2],
+    {?
+        str ?= [_|more] -> take_all(more, fill2)
     }
 }
 
 take_n(n, str, fill)
 {
-    if(n == 0) str = []
-    else {?
-        str ?= [_|more] -> {
-            fill = [_|fill2],
-            take_n(n-1, more, fill2)
+    if(n == 0) { str = [], fill = [] }
+    else {
+        fill = [_|fill2],
+        {?
+            str ?= [_|more] -> take_n(n-1, more, fill2)
         }
     }
 }
@@ -305,12 +308,11 @@ mK_reify(states, reified)
     app:maplist(f, states, reified)
 }
 
-// todo: starting with a defined gap in fill is wrong, take should do that
 // todo: parameterize over the reifier
 #define run(r, vars, goals...) _run(r, vars, [goals])
 _run(r, vars, goals)
 {||
-    callempty(``_fresh(vars, goals)``, str, [_|fill]),
+    callempty(``_fresh(vars, goals)``, str, fill),
     take_all(str, fill),
     mK_reify(str, r),
 }
@@ -318,7 +320,7 @@ _run(r, vars, goals)
 #define run_n(n, r, vars, goals...) _run_n(n, r, vars, [goals])
 _run_n(n, r, vars, goals)
 {||
-    callempty(``_fresh(vars, goals)``, str, [_|fill]),
+    callempty(``_fresh(vars, goals)``, str, fill),
     take_n(n, str, fill),
     mK_reify(str, r),
 }

@@ -5,25 +5,23 @@
 
 main()
 {
-    // todo: blocks on take_all or take_n > 2
-    run_n(2, r, [x], disj_plus(equalo(5,x), equalo(6,x))),
+    // todo: write these as a test suite
+    run(r, ([x,y]), disj_plus(equalo(5,x), equalo(6,y))),
     writeln(r),
-    // todo: on take_all or take_n > 2 we get 'expected variable but received: []'
-    run_n(2, r2, ([y,z]), disj(equalo(5,y), equalo(6,z))),
+    run(r2, ([p,q]), disj(equalo(5,p), equalo(6,q))),
     writeln(r2),
     {||
-    callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, [_|fill3]),
+    callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, fill3),
     take_all(r3, fill3),
     },
     writeln(r3),
     {||
-    callempty(fresh(([i,j,k]), equalo(5,i), equalo(6,j), equalo(7,k)), r4, [_|fill4]),
+    callempty(fresh(([i,j,k]), equalo(5,i), equalo(6,j), equalo(7,k)), r4, fill4),
     take_all(r4, fill4),
     },
-    writeln(r4),
-    // todo: revisit the below once above disj is fixed
-    // todo: write these as a test suite
-    //callempty(x, callfresh(y, disj(equalo(5,x), equalo(6,y))), r, [_|fill]),
-    //callempty(x, callfresh(y, conj(equalo(5,x), disj(equalo(6,y),equalo(7,y)))), r, [_|fill]),
-    //writeln(r),
+    {||
+    callempty(fresh(([u,v]), conj(equalo(5,u), disj(equalo(6,v),equalo(7,v)))), r5, fill5),
+    take_all(r5, fill5),
+    },
+    writeln(r5),
 }
