@@ -3,6 +3,23 @@
 
 #include "kanren.pcn"
 
+#define appendo(a,b,c) ``_appendo(a,b,c)``
+_appendo(a, b, c, st, str, fill)
+{
+    f = disj(
+        conj(
+            equalo(a, []),
+            equalo(b, c)
+        ),
+        fresh(([h,at,ct]), conj_plus(
+            equalo(a, [h|at]),
+            equalo(c, [h|ct]),
+            appendo(at, b, ct)
+        )
+    )),
+    `f`(st, str, fill)
+}
+
 main()
 {
     // todo: write these as a test suite
@@ -32,7 +49,7 @@ main()
         conj_plus(equalo(6,xx), equalo(5,yy))
     )),
     writeln(r7),
-    run(r8, ([qqq,aa,bb,cc]), equalo(qqq, ([aa,bb])), equalo(cc, (["a","b","c","d"])),  ``appendo(aa,bb,cc)``),
+    run(r8, ([qqq,aa,bb,cc]), equalo(qqq, ([aa,bb])), equalo(cc, (["a","b","c","d"])),  appendo(aa,bb,cc)),
     writeln(r8)
 }
 
@@ -46,19 +63,4 @@ walk2(st, r)
     walkstar({0}, st.substitutions, x),
     walkstar({1}, st.substitutions, y),
     r = {x,y}
-}
-
-appendo(a, b, c, st, str, fill)
-{
-    _disj(
-        conj(
-            equalo(a, []),
-            equalo(b, c)
-        ),
-        fresh(([h,at,ct]), conj_plus(
-            equalo(a, [h|at]),
-            equalo(c, [h|ct]),
-            ``appendo(at, b, ct)``
-        )
-    ), st, str, fill)
 }
