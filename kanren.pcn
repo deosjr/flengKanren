@@ -37,15 +37,14 @@ unify(u0, v0, sub0, sub)
 {
     walk(u0, sub0, u),
     walk(v0, sub0, v),
-    {?
-        u ?= {x}, v ?= {x} -> sub = sub0,
+    if(u == v) sub = sub0
+    else {?
         u ?= {_} -> map:insert(u, v, sub0, sub),
         v ?= {_} -> map:insert(v, u, sub0, sub),
         u ?= [uh|ut], v ?= [vh|vt] -> {
             unify(uh, vh, sub0, sub1),
             unify(ut, vt, sub1, sub)
         },
-        u == v -> sub = sub0,
         default -> sub = false
     }
 }

@@ -1,0 +1,60 @@
+-initialization(main).
+
+main :- 
+    callempty(callfresh(X,equalo(X, 42)), Str, Fill),
+    Fill = [_|_],
+    writeln(Str).
+
+empty_state(S) :- S = state([], 0).
+
+var(V, state(Sub, C0), S) :-
+    V = { C0 },
+    C is C0 + 1,
+    S = state(Sub, C).
+
+walk({U}, Sub, V) :-
+    map:lookup({U}, Sub, Value, false),
+    walk2({U}, Value, Sub, V).
+walk(U, _, V) :- otherwise | V = U.
+
+walk2(U, false, _, V) :- V = U.
+walk2(_, Value, Sub, V) :- otherwise | walk(Value, Sub, V).
+
+unify(U0, V0, Sub0, Sub) :-
+    walk(U0, Sub0, U),
+    walk(V0, Sub0, V),
+    unify2(U, V, Sub0, Sub).
+
+unify2(X, X, Sub, Sub).
+unify2({X}, V, Sub0, Sub) :-
+    V =\= {X} |
+    map:insert({X}, V, Sub0, Sub).
+unify2(U, {X}, Sub0, Sub) :-
+    U =\= {X} |
+    map:insert({X}, U, Sub0, Sub).
+unify2(U, V, Sub0, Sub) :-
+    U == [UH|UT], V == [VH|VT] |
+    unify(UH, VH, Sub0, Sub1),
+    unify(UT, VT, Sub1, Sub).
+unify2(_, _, _, Sub) :- otherwise | Sub = false.
+
+-rewrite(equalo(X, Y), '':{equalo,X,Y}).
+equalo(U, V, state(Sub0, VC), Str, Fill) :-
+    unify(U, V, Sub0, Sub),
+    equalo2(Sub, VC, Str, Fill).
+
+equalo2(false, _, Str, _) :- Str = [].
+equalo2(_, _, [], _).
+equalo2(Sub, VC, Str, [Place|_]) :-
+    Sub =\= false |
+    Str = [Place],
+    Place = state(Sub, VC).
+
+-rewrite(callfresh(X, Goal), '':{callfresh,X,Goal}).
+callfresh(X, Goal, State, Stream, Fill) :-
+    var(X, State, St),
+    apply(Goal, [St, Stream, Fill]).
+
+callempty(Goal, Str, Fill) :-
+    empty_state(St0),
+    apply(Goal, [St0, Str, Fill]).
