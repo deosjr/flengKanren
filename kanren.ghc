@@ -1,8 +1,8 @@
 -initialization(main).
 
 main :- 
-    callempty(callfresh(X,equalo(X, 42)), Str, Fill),
-    Fill = [_|_],
+    callempty(callfresh(X,disj(equalo(X, 42), equalo(X, 43))), Str, Fill),
+    take_all(Str, Fill),
     writeln(Str).
 
 empty_state(S) :- S = state([], 0).
@@ -58,3 +58,33 @@ callfresh(X, Goal, State, Stream, Fill) :-
 callempty(Goal, Str, Fill) :-
     empty_state(St0),
     apply(Goal, [St0, Str, Fill]).
+
+-rewrite(disj(G1, G2), '':{disj,G1,G2}).
+disj(_, _, _, [], Fill) :- Fill = [].
+disj(Goal1, Goal2, State, Stream, Fill) :-
+    data(Fill) |
+    apply(Goal1, [State, Str1, Fill1]),
+    apply(Goal2, [State, Str2, Fill2]),
+    mplus(Str1, Fill1, Str2, Fill2, Stream, Fill).
+
+mplus(Str1, _, Str2, _, [], _) :-
+    Str1 = [], Str2 = [].
+mplus(Str1, Fill1, Str2, Fill2, Stream, [_|More]) :-
+    Fill1 = [_|_],
+    mplus2(Str1, Fill1, Str2, Fill2, Stream, [_|More]).
+
+mplus2([], _, Str2, Fill2, Stream, Fill) :-
+    Stream = Str2,
+    Fill2 = Fill.
+mplus2([H|T], [_|More1], Str2, Fill2, Stream, [_|More]) :-
+    Stream = [H|Str3],
+    mplus(Str2, Fill2, T, More1, Str3, More).
+
+take_all(Str, Fill) :-
+    Fill = [_|Fill2],
+    take_all2(Str, Fill2).
+
+take_all2([], Fill) :-
+    Fill = [].
+take_all2([_|More], Fill) :-
+    take_all(More, Fill).
