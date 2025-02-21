@@ -3,7 +3,8 @@
 main :- 
     callempty(callfresh(X,disj(equalo(X, 42), equalo(X, 43))), Str, Fill),
     take_all(Str, Fill),
-    writeln(Str).
+    mK_reify(Str, R),
+    writeln(R).
 
 empty_state(S) :- S = state([], 0).
 
@@ -88,3 +89,18 @@ take_all2([], Fill) :-
     Fill = [].
 take_all2([_|More], Fill) :-
     take_all(More, Fill).
+
+walkstar(U, state(Sub, _), V) :-
+    walk(U, Sub, U0),
+    walkstar2(Sub, U0, V).
+
+walkstar2(_, {X}, V) :- V = {X}.
+walkstar2(Sub, [H|T], V) :-
+    V = [HH|TT],
+    walkstar(H, state(Sub, _), HH),
+    walkstar(T, state(Sub, _), TT).
+walkstar2(_, U0, V) :- otherwise | U0=V.
+
+mK_reify(States, Reified) :-
+    Goal = '':{walkstar, {0}},
+    app:maplist(Goal, States, Reified).
