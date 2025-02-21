@@ -1,7 +1,7 @@
 -initialization(main).
 
 main :- 
-    callempty(callfresh(X,disj(equalo(X, 42), equalo(X, 43))), Str, Fill),
+    callempty(callfresh(X, disj_plus([equalo(X, 42), equalo(X, 43), equalo(X, 44)])), Str, Fill),
     take_all(Str, Fill),
     mK_reify(Str, R),
     writeln(R).
@@ -80,6 +80,12 @@ mplus2([], _, Str2, Fill2, Stream, Fill) :-
 mplus2([H|T], [_|More1], Str2, Fill2, Stream, [_|More]) :-
     Stream = [H|Str3],
     mplus(Str2, Fill2, T, More1, Str3, More).
+
+-rewrite(disj_plus(Goals), '':{disj_plus,Goals}).
+disj_plus([Goal1, Goal2], St, Str, Fill) :-
+    disj(Goal1, Goal2, St, Str, Fill).
+disj_plus([Goal1, Goal2, Goal3|Rest], St, Str, Fill) :-
+    disj(Goal1, disj_plus([Goal2, Goal3|Rest]), St, Str, Fill).
 
 take_all(Str, Fill) :-
     Fill = [_|Fill2],
