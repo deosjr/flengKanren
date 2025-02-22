@@ -2,7 +2,7 @@
 
 main :- 
     callempty(callfresh(X, disj_plus([equalo(X, 42), equalo(X, 43), equalo(X, 44)])), Str, Fill),
-    take_all(Str, Fill),
+    take_n(2, Str, Fill),
     mK_reify(Str, R),
     writeln(R).
 
@@ -95,6 +95,17 @@ take_all2([], Fill) :-
     Fill = [].
 take_all2([_|More], Fill) :-
     take_all(More, Fill).
+
+take_n(0, Str, Fill) :-
+    Str = [], Fill = [].
+take_n(N, Str, Fill) :-
+    N > 0 |
+    Fill = [_|Fill2],
+    take_n2(N, Str, Fill2).
+
+take_n2(N, [_|More], Fill) :-
+    NMin1 is N - 1,
+    take_n(NMin1, More, Fill).
 
 walkstar(U, state(Sub, _), V) :-
     walk(U, Sub, U0),
