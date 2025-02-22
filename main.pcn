@@ -3,6 +3,85 @@
 
 #include "kanren.pcn"
 
+main()
+{
+    test_x5y6(),
+    test_x5y6take2(),
+    test_x5y6full(),
+    test_x5y6z7(),
+    test_x5y6or7(),
+    test_custom_reifier(),
+    test_conde(),
+    test_appendo()
+}
+
+test_x5y6()
+{
+    run(r, ([x,y]), disj_plus(equalo(5,x), equalo(6,y))),
+    writeln(r)
+}
+
+test_x5y6take2()
+{
+    run_n(2, r, ([x,y]), disj_plus(equalo(5,x), equalo(6,y))),
+    writeln(r)
+}
+
+test_x5y6full()
+{
+    {||
+    callempty(callfresh(x, callfresh(y, conj(equalo(5,x), equalo(6,y)))), r, fill),
+    take_all(r, fill),
+    },
+    writeln(r)
+}
+
+test_x5y6z7()
+{
+    {||
+    callempty(fresh(([x,y,z]), equalo(5,x), equalo(6,y), equalo(7,z)), r, fill),
+    take_all(r, fill),
+    },
+    writeln(r)
+}
+
+test_x5y6or7()
+{
+    {||
+    callempty(fresh(([x,y]), conj(equalo(5,x), disj(equalo(6,y),equalo(7,y)))), r, fill),
+    take_all(r, fill),
+    },
+    writeln(r)
+}
+
+test_custom_reifier()
+{
+    run_reif(r, ``custom_reifier``, ([x,y]), disj(equalo(5,x), equalo(6,y))),
+    writeln(r)
+}
+
+custom_reifier(states, reified)
+{
+    app:maplist(``walk2``, states, reified)
+}
+
+walk2(st, r)
+{
+    walkstar({0}, st.substitutions, x),
+    walkstar({1}, st.substitutions, y),
+    r = {x,y}
+}
+
+test_conde()
+{
+    // todo: conde macro doesn't play nice with nested lists and recursion
+    run(r, ([x,y]), disj_plus(
+        conj_plus(equalo(5,x), equalo(6,y)),
+        conj_plus(equalo(6,x), equalo(5,y))
+    )),
+    writeln(r)
+}
+
 #define appendo(a,b,c) ``_appendo(a,b,c)``
 _appendo(a, b, c, st, str, fill)
 {
@@ -20,47 +99,8 @@ _appendo(a, b, c, st, str, fill)
     `f`(st, str, fill)
 }
 
-main()
+test_appendo()
 {
-    // todo: write these as a test suite
-    run(r, ([x,y]), disj_plus(equalo(5,x), equalo(6,y))),
-    writeln(r),
-    run_n(2, r2, ([p,q]), disj(equalo(5,p), equalo(6,q))),
-    writeln(r2),
-    {||
-    callempty(callfresh(a, callfresh(b, conj(equalo(5,a), equalo(6,b)))), r3, fill3),
-    take_all(r3, fill3),
-    },
-    writeln(r3),
-    {||
-    callempty(fresh(([i,j,k]), equalo(5,i), equalo(6,j), equalo(7,k)), r4, fill4),
-    take_all(r4, fill4),
-    },
-    {||
-    callempty(fresh(([u,v]), conj(equalo(5,u), disj(equalo(6,v),equalo(7,v)))), r5, fill5),
-    take_all(r5, fill5),
-    },
-    writeln(r5),
-    run_reif(r6, ``custom_reifier``, ([pp,qq]), disj(equalo(5,pp), equalo(6,qq))),
-    writeln(r6),
-    // todo: conde macro doesn't play nice with nested lists and recursion
-    run(r7, ([xx,yy]), disj_plus(
-        conj_plus(equalo(5,xx), equalo(6,yy)),
-        conj_plus(equalo(6,xx), equalo(5,yy))
-    )),
-    writeln(r7),
-    run(r8, ([qqq,aa,bb,cc]), equalo(qqq, ([aa,bb])), equalo(cc, (["a","b","c","d"])),  appendo(aa,bb,cc)),
-    writeln(r8)
-}
-
-custom_reifier(states, reified)
-{
-    app:maplist(``walk2``, states, reified)
-}
-
-walk2(st, r)
-{
-    walkstar({0}, st.substitutions, x),
-    walkstar({1}, st.substitutions, y),
-    r = {x,y}
+    run(r, ([q,a,b,c]), equalo(q, ([a,b])), equalo(c, (["a","b","c","d"])),  appendo(a,b,c)),
+    writeln(r)
 }
