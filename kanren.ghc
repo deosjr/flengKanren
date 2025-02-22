@@ -1,8 +1,8 @@
 -initialization(main).
 
 main :- 
-    callempty(callfresh(X, disj_plus([equalo(X, 42), equalo(X, 43), equalo(X, 44)])), Str, Fill),
-    take_n(2, Str, Fill),
+    callempty(callfresh(X, disj_plus([fives(X), sixes(X), sevens(X)])), Str, Fill),
+    take_n(9, Str, Fill),
     mK_reify(Str, R),
     writeln(R).
 
@@ -121,3 +121,15 @@ walkstar2(_, U0, V) :- otherwise | U0=V.
 mK_reify(States, Reified) :-
     Goal = '':{walkstar, {0}},
     app:maplist(Goal, States, Reified).
+
+-rewrite(fives(X), '':{fives, X}).
+fives(X, St, Str, Fill) :-
+    apply(disj(equalo(X, 5), fives(X)), [St, Str, Fill]).
+
+-rewrite(sixes(X), '':{sixes, X}).
+sixes(X, St, Str, Fill) :-
+    apply(disj(equalo(X, 6), sixes(X)), [St, Str, Fill]).
+
+-rewrite(sevens(X), '':{sevens, X}).
+sevens(X, St, Str, Fill) :-
+    apply(disj(equalo(X, 7), sevens(X)), [St, Str, Fill]).
