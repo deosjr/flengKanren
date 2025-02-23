@@ -90,10 +90,10 @@ _disj(goal1, goal2, st, str, fill)
     }
 }
 
-function disj3(goal1, goal2, goal3)
+#define disj3(goal1, goal2, goal3) ``_disj3(goal1, goal2, goal3)``
+_disj3(goal1, goal2, goal3, st, str, fill)
 {
-    f = ``_disj(goal2, goal3)``,
-    return(``_disj(goal1, f)``)
+    apply(disj(goal1, disj(goal2, goal3)), [st, str, fill])
 }
 
 mplus(str1, fill1, str2, fill2, str, fill)

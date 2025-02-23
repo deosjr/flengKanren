@@ -5,12 +5,15 @@
 
 main()
 {
+    /*
     test_x5y6(),
     test_x5y6take2(),
     test_x5y6full(),
     test_x5y6z7(),
     test_x5y6or7(),
+    */
     test_custom_reifier(),
+    test_disj3_567(),
     test_conde(),
     test_appendo()
 }
@@ -70,6 +73,12 @@ walk2(st, r)
     walkstar({0}, st.substitutions, x),
     walkstar({1}, st.substitutions, y),
     r = {x,y}
+}
+
+test_disj3_567()
+{
+    run_n(9, r, [x], disj3(fives(x), sixes(x), sevens(x))),
+    writeln(r)
 }
 
 test_conde()
