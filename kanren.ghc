@@ -1,9 +1,7 @@
 -initialization(main).
 
 main :- 
-    callempty(callfresh(X, disj_plus([fives(X), sixes(X), sevens(X)])), Str, Fill),
-    take_n(9, Str, Fill),
-    mK_reify(Str, R),
+    run_n(9, R, [X], [disj_plus([fives(X), sixes(X), sevens(X)])]),
     writeln(R).
 
 empty_state(S) :- S = state([], 0).
@@ -112,6 +110,20 @@ bind3(T0, More0, [H1|T1], More1, Goal, Str, [_|More]) :-
     bind(T0, More0, Goal, Str2, Fill2),
     mplus(T1, More1, Str2, Fill2, Str3, More).
 
+-rewrite(conj_plus(Goals), '':{conj_plus,Goals}).
+conj_plus([Goal], St, Str, Fill) :-
+    apply(Goal, [St, Str, Fill]).
+conj_plus([Goal1, Goal2], St, Str, Fill) :-
+    conj(Goal1, Goal2, St, Str, Fill).
+conj_plus([Goal1, Goal2, Goal3|Rest], St, Str, Fill) :-
+    conj(Goal1, conj_plus([Goal2, Goal3|Rest]), St, Str, Fill).
+
+-rewrite(fresh(Vars, Goals), '':{fresh,Vars,Goals}).
+fresh([], Goals, St, Str, Fill) :-
+    conj_plus(Goals, St, Str, Fill).
+fresh([X|More], Goals, St, Str, Fill) :-
+    callfresh(X, fresh(More, Goals), St, Str, Fill).
+
 take_all(Str, Fill) :-
     Fill = [_|Fill2],
     take_all2(Str, Fill2).
@@ -146,6 +158,16 @@ walkstar2(_, U0, V) :- otherwise | U0=V.
 mK_reify(States, Reified) :-
     Goal = '':{walkstar, {0}},
     app:maplist(Goal, States, Reified).
+
+run(R, Vars, Goals) :-
+    callempty(fresh(Vars, Goals), Str, Fill),
+    take_all(Str, Fill),
+    mK_reify(Str, R).
+
+run_n(N, R, Vars, Goals) :-
+    callempty(fresh(Vars, Goals), Str, Fill),
+    take_n(N, Str, Fill),
+    mK_reify(Str, R).
 
 -rewrite(fives(X), '':{fives, X}).
 fives(X, St, Str, Fill) :-
