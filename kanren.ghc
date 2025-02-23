@@ -87,6 +87,31 @@ disj_plus([Goal1, Goal2], St, Str, Fill) :-
 disj_plus([Goal1, Goal2, Goal3|Rest], St, Str, Fill) :-
     disj(Goal1, disj_plus([Goal2, Goal3|Rest]), St, Str, Fill).
 
+-rewrite(conj(G1, G2), '':{conj,G1,G2}).
+conj(_, _, _, [], Fill) :- Fill = [].
+conj(Goal1, Goal2, State, Stream, Fill) :-
+    data(Fill) |
+    apply(Goal1, [State, Str0, Fill0]),
+    bind(Str0, Fill0, Goal2, Stream, Fill).
+
+bind(Str0, _, _, [], _) :- Str0 = [].
+bind(Str0, Fill0, Goal, Str, [_|More]) :-
+    Fill0 = [_|More0],
+    bind2(Str0, More0, Goal, Str, [_|More]).
+
+bind2([], _, _, Str, _) :- Str = [].
+bind2([H0|T0], More0, Goal, Str, Fill) :-
+    apply(Goal, [H0, Str1, Fill1]),
+    Fill1 = [_|More1],
+    bind3(T0, More0, Str1, More1, Goal, Str, Fill).
+
+bind3(T0, More0, [], _, Goal, Str, Fill) :-
+    bind(T0, More0, Goal, Str, Fill).
+bind3(T0, More0, [H1|T1], More1, Goal, Str, [_|More]) :-
+    Str = [H1|Str3],
+    bind(T0, More0, Goal, Str2, Fill2),
+    mplus(T1, More1, Str2, Fill2, Str3, More).
+
 take_all(Str, Fill) :-
     Fill = [_|Fill2],
     take_all2(Str, Fill2).
